@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบคำนวณวันเกษียณอายุราชการ - อบจ.ศรีสะเกษ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f3f4f6;
+            background-image: url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%239C92AC" fill-opacity="0.05"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .gradient-text {
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .input-field {
+            transition: all 0.3s ease;
+        }
+
+        .input-field:focus {
+            box-shadow: 0 0 0 3px rgba(251, 146, 60, 0.3); /* Orange focus ring */
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+
+        /* Result Animation */
+        @keyframes slideDownFade {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-enter {
+            animation: slideDownFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#e65100', // Orange theme fitting for Sisaket area aesthetics often used
+                        'primary-light': '#ff9800',
+                        'primary-dark': '#e65100',
+                        'secondary': '#1e3a8a', // Deep blue contrast
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen flex flex-col antialiased text-gray-800">
+    
+    <!-- Navbar / Header -->
+    <header class="bg-gradient-to-r from-orange-600 to-primary-light text-white shadow-md z-10 sticky top-0">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center gap-4">
+                <!-- SVG Logo representing local government / organization -->
+                <div class="bg-white p-1 rounded-full shadow-sm flex-shrink-0">
+                    <svg class="w-12 h-12 text-primary" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Simplified abstract circular logo reminiscent of official seals -->
+                        <circle cx="50" cy="50" r="46" stroke="currentColor" stroke-width="4"/>
+                        <circle cx="50" cy="50" r="38" stroke="currentColor" stroke-width="1.5" stroke-dasharray="4 4"/>
+                        <path d="M50 25C36.1929 25 25 36.1929 25 50C25 63.8071 36.1929 75 50 75C63.8071 75 75 63.8071 75 50" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+                        <path d="M35 50C35 41.7157 41.7157 35 50 35" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
+                        <!-- Central element resembling a spire/stupa -->
+                        <path d="M50 35L42 60H58L50 35Z" fill="currentColor"/>
+                        <path d="M50 20L47 30H53L50 20Z" fill="currentColor"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold leading-tight">องค์การบริหารส่วนจังหวัดศรีสะเกษ</h1>
+                    <p class="text-sm sm:text-base text-orange-100 font-medium">ระบบคำนวณวันเกษียณอายุราชการ</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow flex items-center justify-center p-4 sm:p-6 lg:p-8">
+        <div class="max-w-4xl w-full">
+            
+            <div class="glass-card rounded-2xl overflow-hidden">
+                <div class="grid grid-cols-1 md:grid-cols-5 h-full">
+                    
+                    <!-- Left Column: Information & Rules -->
+                    <div class="bg-secondary text-white p-8 md:col-span-2 flex flex-col justify-center">
+                        <div class="mb-6 flex items-center gap-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-orange-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <h2 class="text-2xl font-bold">หลักเกณฑ์การคำนวณ</h2>
+                        </div>
+                        
+                        <ul class="space-y-4 text-sm sm:text-base text-blue-50">
+                            <li class="flex items-start">
+                                <span class="bg-blue-800 rounded-full p-1 mr-3 mt-0.5 flex-shrink-0 text-orange-400">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                </span>
+                                <div>
+                                    <strong class="text-white block mb-1">ปีงบประมาณไทย</strong>
+                                    เริ่ม 1 ตุลาคม ถึง 30 กันยายน ของปีถัดไป
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="bg-blue-800 rounded-full p-1 mr-3 mt-0.5 flex-shrink-0 text-orange-400">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                </span>
+                                <div>
+                                    <strong class="text-white block mb-1">เกิด 2 ต.ค. - 30 ก.ย.</strong>
+                                    ครบ 60 ปีบริบูรณ์ในปีงบประมาณใด พ้นจากราชการ 30 กันยายน ของปีนั้น
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <span class="bg-blue-800 rounded-full p-1 mr-3 mt-0.5 flex-shrink-0 text-orange-400">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                </span>
+                                <div>
+                                    <strong class="text-white block mb-1">เกิด 1 ตุลาคม</strong>
+                                    ครบ 60 ปีในวันที่ 30 กันยายนพอดี เกษียณ 1 ตุลาคม ของปีเดียวกันนั้นทันที
+                                </div>
+                            </li>
+                        </ul>
+
+                        <div class="mt-8 pt-6 border-t border-blue-800/50 text-xs text-blue-200">
+                            * อ้างอิงตามพระราชบัญญัติบำเหน็จบำนาญข้าราชการส่วนท้องถิ่น และประมวลกฎหมายแพ่งและพาณิชย์ มาตรา 16
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Form -->
+                    <div class="p-8 md:col-span-3 bg-white">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">กรอกวันเดือนปีเกิด</h3>
+                        
+                        <form id="calculatorForm" class="space-y-6">
+                            
+                            <!-- Date Selection -->
+                            <div class="grid grid-cols-3 gap-4">
+                                <!-- Day -->
+                                <div>
+                                    <label for="birthDay" class="block text-sm font-semibold text-gray-700 mb-1">วันที่</label>
+                                    <select id="birthDay" class="input-field block w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary p-3" required>
+                                        <option value="" disabled selected>วัน</option>
+                                        <!-- Will be populated by JS -->
+                                    </select>
+                                </div>
+                                
+                                <!-- Month -->
+                                <div>
+                                    <label for="birthMonth" class="block text-sm font-semibold text-gray-700 mb-1">เดือน</label>
+                                    <select id="birthMonth" class="input-field block w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary p-3" required>
+                                        <option value="" disabled selected>เดือน</option>
+                                        <option value="1">มกราคม (1)</option>
+                                        <option value="2">กุมภาพันธ์ (2)</option>
+                                        <option value="3">มีนาคม (3)</option>
+                                        <option value="4">เมษายน (4)</option>
+                                        <option value="5">พฤษภาคม (5)</option>
+                                        <option value="6">มิถุนายน (6)</option>
+                                        <option value="7">กรกฎาคม (7)</option>
+                                        <option value="8">สิงหาคม (8)</option>
+                                        <option value="9">กันยายน (9)</option>
+                                        <option value="10">ตุลาคม (10)</option>
+                                        <option value="11">พฤศจิกายน (11)</option>
+                                        <option value="12">ธันวาคม (12)</option>
+                                    </select>
+                                </div>
+
+                                <!-- Year (Buddhist Era) -->
+                                <div>
+                                    <label for="birthYear" class="block text-sm font-semibold text-gray-700 mb-1">ปี พ.ศ.</label>
+                                    <select id="birthYear" class="input-field block w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary focus:border-primary p-3" required>
+                                        <option value="" disabled selected>ปี พ.ศ.</option>
+                                        <!-- Will be populated by JS -->
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Calculate Button -->
+                            <button type="submit" class="w-full flex justify-center items-center gap-2 py-3.5 px-4 border border-transparent rounded-xl shadow-sm text-lg font-bold text-white bg-primary hover:bg-primary-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors transform hover:-translate-y-0.5 duration-200">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                </svg>
+                                คำนวณวันเกษียณ
+                            </button>
+                        </form>
+
+                        <!-- Result Area (Hidden by default) -->
+                        <div id="resultContainer" class="hidden mt-8">
+                            <div class="relative bg-orange-50 border border-orange-200 rounded-xl p-6 shadow-inner text-center">
+                                <!-- Decoration -->
+                                <div class="absolute -top-3 -right-3 text-orange-300 opacity-50">
+                                    <svg class="w-16 h-16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-1.77-.45-2.34-.94-2.34-1.67 0-.84.79-1.43 2.1-1.43 1.38 0 1.9.66 1.94 1.64h1.71c-.05-1.34-.87-2.57-2.49-2.97V5H10.9v1.69c-1.51.32-2.72 1.3-2.72 2.81 0 1.79 1.49 2.69 3.66 3.21 1.95.46 2.34 1.15 2.34 1.87 0 .53-.39 1.64-2.25 1.64-1.74 0-2.1-.96-2.17-1.92H8c.07 1.8 1.12 3.01 2.9 3.44V20h2.4v-1.74c1.83-.24 3.06-1.31 3.06-2.9 0-2.31-2.02-3.13-4.05-3.66z"/></svg>
+                                </div>
+
+                                <h4 class="text-sm font-semibold text-orange-800 uppercase tracking-wider mb-2">ผลการคำนวณวันเกษียณอายุราชการ</h4>
+                                
+                                <div class="mb-4">
+                                    <p class="text-gray-600 text-sm mb-1">วัน/เดือน/ปีเกิด ที่ระบุ:</p>
+                                    <p id="resBirthDate" class="text-lg font-medium text-gray-800 bg-white inline-block px-3 py-1 rounded-md border border-gray-200">-</p>
+                                </div>
+
+                                <div class="w-full h-px bg-gradient-to-r from-transparent via-orange-300 to-transparent my-4"></div>
+                                
+                                <p class="text-gray-700 mb-1">ท่านจะเกษียณอายุราชการในวันที่</p>
+                                <div id="resRetirementDate" class="text-2xl sm:text-3xl font-bold text-primary bg-gradient-to-r from-primary to-orange-500 gradient-text drop-shadow-sm mb-2">
+                                    -
+                                </div>
+                                <p id="resFiscalYear" class="text-sm font-medium text-orange-700 bg-orange-100 inline-block px-3 py-1 rounded-full border border-orange-200">
+                                    สิ้นสุดปีงบประมาณ พ.ศ. -
+                                </p>
+                                
+                                <p id="resSpecialNote" class="mt-4 text-xs sm:text-sm text-blue-700 bg-blue-50 border border-blue-200 p-3 rounded-lg hidden font-medium">
+                                    <!-- Note for October 1st birthdays -->
+                                </p>
+
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            
+            <footer class="mt-8 text-center text-sm text-gray-500">
+                <p>© สงวนลิขสิทธิ์ ระบบคำนวณวันเกษียณอายุราชการ สำหรับข้าราชการส่วนท้องถิ่น</p>
+                <p class="mt-1 text-xs">คำนวณตามหลักเกณฑ์การนับอายุบุคคล ป.พ.พ. มาตรา 16 และ พ.ร.บ. บำเหน็จบำนาญฯ</p>
+            </footer>
+
+        </div>
+    </main>
+
+    <script>
+        const monthNames = [
+            "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+            "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"
+        ];
+
+        // Initialize Select Options
+        document.addEventListener('DOMContentLoaded', () => {
+            const daySelect = document.getElementById('birthDay');
+            const monthSelect = document.getElementById('birthMonth');
+            const yearSelect = document.getElementById('birthYear');
+
+            // Populate Days (1-31)
+            for (let i = 1; i <= 31; i++) {
+                let option = document.createElement('option');
+                option.value = i;
+                option.text = i;
+                daySelect.appendChild(option);
+            }
+
+            // Populate Years (Current year - 100 to Current year)
+            // Using Buddhist Era (BE)
+            const currentCEYear = new Date().getFullYear();
+            const currentBEYear = currentCEYear + 543;
+            
+            // Allow calculation for people born roughly between 2450 to current year
+            for (let y = currentBEYear; y >= currentBEYear - 100; y--) {
+                let option = document.createElement('option');
+                option.value = y;
+                option.text = y;
+                yearSelect.appendChild(option);
+            }
+
+            // Dynamic Day Adjuster based on Month/Year selection (Leap years etc)
+            function adjustDays() {
+                const month = parseInt(monthSelect.value);
+                const yearBE = parseInt(yearSelect.value);
+                
+                if (!month || !yearBE) return;
+
+                const yearCE = yearBE - 543;
+                // Get days in month (0 gets last day of previous month, so we use month directly to get last day of selected month)
+                const daysInMonth = new Date(yearCE, month, 0).getDate();
+                
+                const currentSelectedDay = parseInt(daySelect.value);
+                
+                daySelect.innerHTML = '<option value="" disabled selected>วัน</option>';
+                
+                for (let i = 1; i <= daysInMonth; i++) {
+                    let option = document.createElement('option');
+                    option.value = i;
+                    option.text = i;
+                    // Keep previously selected day if it's still valid
+                    if (currentSelectedDay === i) {
+                        option.selected = true;
+                    }
+                    daySelect.appendChild(option);
+                }
+                
+                // If previously selected day is now invalid (e.g. Feb 30), reset to max day
+                if (currentSelectedDay > daysInMonth) {
+                     daySelect.value = daysInMonth;
+                }
+            }
+
+            monthSelect.addEventListener('change', adjustDays);
+            yearSelect.addEventListener('change', adjustDays);
+        });
+
+        // Form Submission Logic
+        document.getElementById('calculatorForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const d = parseInt(document.getElementById('birthDay').value);
+            const m = parseInt(document.getElementById('birthMonth').value);
+            const y_be = parseInt(document.getElementById('birthYear').value); // Buddhist Era
+
+            if (!d || !m || !y_be) {
+                // Should not happen due to 'required' attributes, but good for safety
+                alert("กรุณาระบุวัน เดือน ปีเกิด ให้ครบถ้วน");
+                return;
+            }
+
+            calculateRetirement(d, m, y_be);
+        });
+
+        function calculateRetirement(day, month, birthYearBE) {
+            /*
+            Logic:
+            Age 60 is reached in: birthYearBE + 60
+            
+            Case 1: Born 1 October
+            - Complete 60 years on 30 September of (birthYearBE + 60).
+            - Retire on 1 October of (birthYearBE + 60).
+            - Fiscal Year is (birthYearBE + 60).
+            
+            Case 2: Born 2 October - 31 December
+            - Complete 60 years between 1 Oct and 30 Dec of (birthYearBE + 60).
+            - This falls into Fiscal Year (birthYearBE + 60 + 1) because fiscal year starts Oct 1 of previous year.
+            - Retire on 30 September of (birthYearBE + 60 + 1).
+            
+            Case 3: Born 1 January - 30 September
+            - Complete 60 years between 31 Dec (prev year) and 29 Sep of (birthYearBE + 60).
+            - This falls into Fiscal Year (birthYearBE + 60).
+            - Retire on 30 September of (birthYearBE + 60).
+            */
+
+            const year60BE = birthYearBE + 60;
+            
+            let retireDay = 30;
+            let retireMonth = 9; // September
+            let retireYearBE = year60BE;
+            let fiscalYear = year60BE;
+            let isOctFirst = false;
+
+            if (month === 10 && day === 1) {
+                // Born 1 Oct
+                retireDay = 1;
+                retireMonth = 10; // October
+                retireYearBE = year60BE; 
+                fiscalYear = year60BE; // Fiscal year ends Sep 30, they retire Oct 1 of the NEW fiscal year technically, 
+                                       // but rules say they retire Oct 1 of the year they turn 60. 
+                                       // Usually, they are counted in the quota of the fiscal year ending Sep 30 of that year.
+                                       // Let's explicitly define fiscal year as the year they complete 60.
+                isOctFirst = true;
+            } else if (month > 10 || (month === 10 && day >= 2)) {
+                // Born 2 Oct - 31 Dec
+                // They turn 60 in late months, pushing their retirement to the end of the NEXT fiscal year.
+                retireDay = 30;
+                retireMonth = 9;
+                retireYearBE = year60BE + 1;
+                fiscalYear = year60BE + 1;
+            } else {
+                // Born 1 Jan - 30 Sep
+                retireDay = 30;
+                retireMonth = 9;
+                retireYearBE = year60BE;
+                fiscalYear = year60BE;
+            }
+
+            displayResult(day, month, birthYearBE, retireDay, retireMonth, retireYearBE, fiscalYear, isOctFirst);
+        }
+
+        function displayResult(bDay, bMonth, bYear, rDay, rMonth, rYear, fYear, isOctFirst) {
+            
+            // Format Birth Date
+            const birthDateStr = `${bDay} ${monthNames[bMonth - 1]} ${bYear}`;
+            document.getElementById('resBirthDate').textContent = birthDateStr;
+
+            // Format Retirement Date
+            const retireDateStr = `${rDay} ${monthNames[rMonth - 1]} ${rYear}`;
+            document.getElementById('resRetirementDate').textContent = retireDateStr;
+
+            // Format Fiscal Year
+            document.getElementById('resFiscalYear').textContent = `พ้นจากราชการสิ้นสุดปีงบประมาณ พ.ศ. ${fYear}`;
+
+            // Handle Special Note
+            const noteEl = document.getElementById('resSpecialNote');
+            if (isOctFirst) {
+                noteEl.innerHTML = `<strong>หมายเหตุ:</strong> เนื่องจากท่านเกิดวันที่ 1 ตุลาคม จะมีอายุครบ 60 ปีบริบูรณ์ในวันที่ 30 กันยายน จึงพ้นจากราชการในวันที่ 1 ตุลาคม ของปีเดียวกันนั้น (ไม่ได้แถมอายุราชการไปปีถัดไป)`;
+                noteEl.classList.remove('hidden');
+                noteEl.classList.add('block');
+            } else if (bMonth === 10 || bMonth === 11 || bMonth === 12) {
+                 noteEl.innerHTML = `<strong>หมายเหตุ:</strong> ผู้ที่เกิดตั้งแต่วันที่ 2 ตุลาคม เป็นต้นไป จะไปเกษียณในวันที่ 30 กันยายน ของปีถัดไป`;
+                 noteEl.classList.remove('hidden');
+                 noteEl.classList.add('block');
+            }
+            else {
+                noteEl.classList.add('hidden');
+                noteEl.classList.remove('block');
+            }
+
+            // Show Result Container with animation
+            const container = document.getElementById('resultContainer');
+            container.classList.remove('hidden');
+            
+            // Retrigger animation
+            container.classList.remove('result-enter');
+            void container.offsetWidth; // Trigger reflow
+            container.classList.add('result-enter');
+            
+            // Scroll to result smoothly
+            setTimeout(() => {
+                container.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+        }
+    </script>
+</body>
+</html>
