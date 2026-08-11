@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Service Portal & Admin System</title>
     
+    <!-- เพิ่ม Favicon -->
+    <link id="favicon" rel="icon" type="image/png" href="logo.png">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -126,6 +129,12 @@
                 menus = savedMenus ? JSON.parse(savedMenus) : defaultMenus;
                 const savedConfig = localStorage.getItem('app_config');
                 if (savedConfig) appConfig = JSON.parse(savedConfig);
+            }
+            
+            // อัปเดต Favicon ตามรูปโลโก้ที่ตั้งค่าไว้
+            const faviconElement = document.getElementById('favicon');
+            if (faviconElement && appConfig.logoUrl) {
+                faviconElement.href = appConfig.logoUrl;
             }
             
             // เมื่อโหลดเสร็จ ให้วาดหน้าจอ
@@ -621,6 +630,13 @@
             
             saveConfigDataToServer();
             closeConfigModal();
+            
+            // อัปเดต Favicon ใหม่เมื่อบันทึกการตั้งค่า
+            const faviconElement = document.getElementById('favicon');
+            if (faviconElement && appConfig.logoUrl) {
+                faviconElement.href = appConfig.logoUrl;
+            }
+            
             renderApp();
         }
 
